@@ -7,6 +7,7 @@ enum page_type {MAIN_PAGE, GAME, GAME_OVER};
 
 
 
+
 /*
 * @brief Create a new app
 * @return app

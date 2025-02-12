@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "app.h"
+#include "elements.h"
 
 
 #define SCREEN_WIDTH 800
@@ -25,17 +26,7 @@ typedef struct {
     size_t num_expenses;
     size_t max_expenses;
 } expenses;
-typedef struct _Button {
-    Vector2 start;
-    size_t width;
-    size_t height;
-    Color color;
-    Vector2 text_pos;
-    char* text;
-    bool hovering;
-    bool clicked;
-    size_t font_size;
-} Button;
+
 
 int init_expenses(expenses* expenses);
 void destroy_expenses(expenses* expenses);
@@ -55,7 +46,7 @@ void read_list_of_expenses(char* filename, expenses* expenses);
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Finance app");
     SetTargetFPS(60);
-    SetExitKey(0); 
+    SetExitKey(0);
     app a = create_app();
     if (a == NULL){
         printf("Error creating app\n");
@@ -66,6 +57,7 @@ int main() {
         printf("Error initializing expenses\n");
         return 1;
     }
+
     while (!WindowShouldClose()) {
         input(a, expenses);
         update(a, expenses);
@@ -86,14 +78,13 @@ void render(app a, expenses expenses){
         switch (get_current_page(a))
         {
             case MAIN_PAGE:
-                render_main_page(a);    
+                render_main_page(a);
                 break;
             case GAME:
                 break;
             case GAME_OVER:
-
                 break;
-        }  
+        }
     EndDrawing();
 }
 void input(app a, expenses expenses){
@@ -115,9 +106,34 @@ void update(app a, expenses expenses){
             break;
     }
 }
+void render_button(button b, size_t offset){
+    DrawRectangle(
+        b.start.x,
+        b.start.y + offset,
+        b.width,
+        b.height,
+        b.color
+    );
+    const size_t text_size = MeasureText(b.text, b.font_size);
+    DrawText(
+        b.text,
+        b.text_pos.x+ b.width/2 - text_size/2,
+        b.text_pos.y + offset + b.height/2 - b.font_size/2,
+        b.font_size,
+        b.text_color
+    );
+}
+void render_drop_down(drop_down dd){
+    if (dd.clicked)
+        for (size_t i = 0; i < dd.num_buttons; i++){
+            render_button(dd.buttons[i], i*dd.buttons[i].height);
+        }
+    else
+        render_button(dd.buttons[0], 0);
+}
 
 void render_main_page(app a){
-    Color color = {0, 96, 138, 255}; // lighter dark blue 
+    Color color = {0, 96, 138, 255}; // lighter dark blue
     ClearBackground(color);
     render_main_page_graph(a);
     render_main_page_nav_left(a);
@@ -132,13 +148,21 @@ void render_main_page_nav_left(app a){
     const char* nav_left[] = {"Funds", "Stocks", "Crypto", "Settings"};
     size_t funds_size = MeasureText(nav_left[0], 20);
     DrawText(nav_left[0], initx + sizex/2 - funds_size/2, inity + 20, 20, RAYWHITE);
-    
+
+
+    // create a dropdown with 3 buttons
+    button b1 = {(Vector2){initx + sizex/2 - 50, inity + 50}, 100, 50, GREEN, WHITE, (Vector2){initx + sizex/2 - 50, inity + 50}, "Stocks", false, false, 20};
+    button b2 = {(Vector2){initx + sizex/2 - 50, inity + 50}, 100, 50, BLUE, WHITE, (Vector2){initx + sizex/2 - 50, inity + 50}, "Crypto", false, false, 20};
+    button b3 = {(Vector2){initx + sizex/2 - 50, inity + 50}, 100, 50, BLACK, WHITE, (Vector2){initx + sizex/2 - 50, inity + 50}, "Settings", false, false, 20};
+    button buttons[] = {b1, b2, b3};
+    drop_down dd = {(Vector2){initx, inity + 50}, 100, 50, RED, WHITE, (Vector2){initx, inity + 50}, "Stocks", false, true, 20, buttons, 3};
+    render_drop_down(dd);
 }
 
 void render_main_page_graph(app a){
     const size_t num_divs = 10;
-    const float graph_ratio = 0.6;
-    const size_t initx = SCREEN_WIDTH*(1 - graph_ratio);
+    const float graph_ratio = 0.60000;
+    const size_t initx = round((float)SCREEN_WIDTH*(1.0000 - graph_ratio));
     const size_t inity = 0;
     const size_t sizex = SCREEN_WIDTH*graph_ratio;
     const size_t sizey = sizex;
@@ -183,7 +207,7 @@ void read_list_of_expenses(char* filename, expenses* expenses){
         }
         expenses->expenses[id] = e;
         expenses->num_expenses++;
-        
+
     }
     fclose(f);
 }

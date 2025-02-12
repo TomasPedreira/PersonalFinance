@@ -1,6 +1,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <raylib.h>
+#include <raymath.h>
 #include "app.h"
 
 struct _app_sate {
