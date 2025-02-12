@@ -1,11 +1,13 @@
 #ifndef __APP_H__
 #define __APP_H__
+#include "elements.h"
 
 typedef struct _app_sate* app;
-typedef enum page_type ptype;
-enum page_type {MAIN_PAGE, GAME, GAME_OVER};
-
-
+struct _app_sate {
+    ptype current_page;
+    element elements[1024];
+    size_t num_elements;
+};
 
 
 /*
@@ -33,7 +35,19 @@ void change_page(app a, ptype p);
 */
 ptype get_current_page(app a);
 
+/*
+* @brief Add an element to the app
+* @param a app
+* @param e element
+*/
+void add_element(app a, element e);
 
-
+/*
+* @brief Get an element from the app
+* @param a app
+* @param i index of the element
+* @return element*
+*/
+element get_element(app a, size_t i);
 
 #endif // __APP_H__

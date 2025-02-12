@@ -4,7 +4,10 @@
 #include <raylib.h>
 #include <raymath.h>
 
-typedef struct _Button {
+typedef enum page_type ptype;
+enum page_type {MAIN_PAGE, GAME, GAME_OVER};
+typedef struct _Button * button;
+struct _Button {
     Vector2 start;
     size_t width;
     size_t height;
@@ -15,9 +18,10 @@ typedef struct _Button {
     bool hovering;
     bool clicked;
     size_t font_size;
-} button;
+};
 
-typedef struct _Drop_drown {
+typedef struct _Drop_drown * drop_down;
+struct _Drop_drown {
     Vector2 start;
     size_t width;
     size_t height;
@@ -28,18 +32,21 @@ typedef struct _Drop_drown {
     bool hovering;
     bool clicked;
     size_t font_size;
+    size_t button_padding;
     button* buttons;
     size_t num_buttons;
-} drop_down;
+};
 
-typedef enum {DD, BTN} elem_tag;
+typedef enum {DD, BTN, GRID} elem_tag;
 
-typedef struct _element {
+typedef struct _element * element;
+
+struct _element {
     elem_tag tag;
+    ptype page;
     union {
         button btn;
         drop_down dd;
     };
-} element;
-
+};
 #endif // __ELEMENTS_H__

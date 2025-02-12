@@ -40,6 +40,60 @@ void render_main_page(app a);
 void render_main_page_graph(app a);
 void render_main_page_nav_left(app a);
 
+drop_down create_drop_down(Vector2 start, Vector2 sizes, Color color1, Color color2, char* text, size_t font_size, size_t button_padding, char** buttons_text, size_t num_buttons){
+    drop_down dd = malloc(sizeof(struct _Drop_drown));
+    printf("Creating drop down\n");
+    if(dd == NULL){
+        printf("Error creating drop down inside creation\n");
+        return NULL;
+    }
+    dd->start = start;
+    dd->width = sizes.x;
+    dd->height = sizes.y;
+    dd->color1 = color1;
+    dd->color2 = color2;
+    size_t text_size = MeasureText(text, font_size);
+    Vector2 text_pos = {start.x + sizes.x/2 - text_size/2, start.y + sizes.y/2 - font_size/2};
+    dd->text_pos = text_pos;
+    dd->text = text;
+    dd->hovering = false;
+    dd->clicked = false;
+    dd->font_size = font_size;
+    dd->button_padding = button_padding;
+    dd->num_buttons = num_buttons;
+
+    button* buttons;
+    buttons = malloc(num_buttons*sizeof(button));
+    printf("Creating buttons\n");
+    if (buttons == NULL){
+        printf("Error creating buttons inside creation\n");
+        return NULL;
+    }
+    for (size_t i = 0; i < num_buttons; i++){
+        button b = malloc(sizeof(struct _Button));
+        printf("Creating button %zu\n", i);
+        if (b == NULL){
+            printf("Error creating button %zu\n", i);
+            return NULL;
+        }
+        b->start = (Vector2){start.x+button_padding/2, start.y + button_padding/2};
+        b->width = sizes.x - button_padding;
+        b->height = sizes.y - button_padding;
+        b->color = color2;
+        b->text = buttons_text[i];
+        b->text_color = RAYWHITE;
+        text_size = MeasureText(b->text, font_size);
+        b->text_pos = (Vector2){b->start.x + b->width/2 - text_size/2, b->start.y + b->height/2 - font_size/2};
+        
+        b->hovering = false;
+        b->clicked = false;
+        b->font_size = font_size;
+        buttons[i] = b;
+    }
+    dd->buttons = buttons;
+    return dd;
+}
+
 
 void read_list_of_expenses(char* filename, expenses* expenses);
 
@@ -57,12 +111,45 @@ int main() {
         printf("Error initializing expenses\n");
         return 1;
     }
+    // erase after
+    const float graph_ratio = 0.6;
+    const size_t initx = 0;
+    const size_t inity = 0;
+    const size_t sizex = SCREEN_WIDTH*(1 - graph_ratio)-1;
+    const size_t sizey = SCREEN_HEIGHT;
+    // create a dropdown with 3 buttons
+
+    drop_down dd = create_drop_down((Vector2){initx + sizex/2 - 100, inity + 100}, (Vector2){200, 50}, BLACK, BLUE, "Options", 20, 10, (char*[]){"Option 1", "Option 2", "Option 3"}, 3);
+    if (dd == NULL){
+        printf("Error creating drop down\n");
+        return 1;
+    }
+    element e = malloc(sizeof(struct _element));
+    if (e == NULL){
+        printf("Error creating element\n");
+        return 1;
+    }
+    e->tag = DD;
+    e->page = MAIN_PAGE;
+    e->dd = dd;
+    printf("Adding element\n");
+    add_element(a, e);
+    printf("Element added\n");
 
     while (!WindowShouldClose()) {
         input(a, expenses);
         update(a, expenses);
         render(a, expenses);
     }
+    printf("Number of butons: %d\n", dd->num_buttons);
+    for (size_t i = 0; i < dd->num_buttons; i++){
+        printf("Freeing button %zu\n", dd->buttons[i]->font_size);
+        free(dd->buttons[i]);
+    }
+    free(dd->buttons);
+    free(dd);
+    free(e);
+    
     destroy_app(a);
     destroy_expenses(&expenses);
     printf("Exiting\n");
@@ -89,10 +176,12 @@ void render(app a, expenses expenses){
 }
 void input(app a, expenses expenses){
     if (IsKeyPressed(KEY_ONE)){
-        change_page(a, MAIN_PAGE);
+        element e = get_element(a, 0);
+        e->dd->clicked = true;
     }
     if (IsKeyPressed(KEY_TWO)){
-        change_page(a, GAME);
+        element e = get_element(a, 0);
+        e->dd->clicked = false;
     }
 }
 void update(app a, expenses expenses){
@@ -108,28 +197,39 @@ void update(app a, expenses expenses){
 }
 void render_button(button b, size_t offset){
     DrawRectangle(
-        b.start.x,
-        b.start.y + offset,
-        b.width,
-        b.height,
-        b.color
+        b->start.x,
+        b->start.y + offset,
+        b->width,
+        b->height,
+        b->color
     );
-    const size_t text_size = MeasureText(b.text, b.font_size);
     DrawText(
-        b.text,
-        b.text_pos.x+ b.width/2 - text_size/2,
-        b.text_pos.y + offset + b.height/2 - b.font_size/2,
-        b.font_size,
-        b.text_color
+        b->text,
+        b->text_pos.x,
+        b->text_pos.y + offset,
+        b->font_size,
+        b->text_color
     );
 }
 void render_drop_down(drop_down dd){
-    if (dd.clicked)
-        for (size_t i = 0; i < dd.num_buttons; i++){
-            render_button(dd.buttons[i], i*dd.buttons[i].height);
+    DrawRectangle(
+        dd->start.x,
+        dd->start.y,
+        dd->width,
+        dd->height,
+        dd->color1
+    );
+    DrawText(
+        dd->text,
+        dd->text_pos.x,
+        dd->text_pos.y,
+        dd->font_size,
+        dd->color2
+    );
+    if (dd->clicked)
+        for (size_t i = 0; i < dd->num_buttons; i++){
+            render_button(dd->buttons[i], (i+1) * dd->height + dd->button_padding/2);
         }
-    else
-        render_button(dd.buttons[0], 0);
 }
 
 void render_main_page(app a){
@@ -149,14 +249,8 @@ void render_main_page_nav_left(app a){
     size_t funds_size = MeasureText(nav_left[0], 20);
     DrawText(nav_left[0], initx + sizex/2 - funds_size/2, inity + 20, 20, RAYWHITE);
 
-
-    // create a dropdown with 3 buttons
-    button b1 = {(Vector2){initx + sizex/2 - 50, inity + 50}, 100, 50, GREEN, WHITE, (Vector2){initx + sizex/2 - 50, inity + 50}, "Stocks", false, false, 20};
-    button b2 = {(Vector2){initx + sizex/2 - 50, inity + 50}, 100, 50, BLUE, WHITE, (Vector2){initx + sizex/2 - 50, inity + 50}, "Crypto", false, false, 20};
-    button b3 = {(Vector2){initx + sizex/2 - 50, inity + 50}, 100, 50, BLACK, WHITE, (Vector2){initx + sizex/2 - 50, inity + 50}, "Settings", false, false, 20};
-    button buttons[] = {b1, b2, b3};
-    drop_down dd = {(Vector2){initx, inity + 50}, 100, 50, RED, WHITE, (Vector2){initx, inity + 50}, "Stocks", false, true, 20, buttons, 3};
-    render_drop_down(dd);
+    element e = get_element(a, 0);
+    render_drop_down(e->dd);
 }
 
 void render_main_page_graph(app a){

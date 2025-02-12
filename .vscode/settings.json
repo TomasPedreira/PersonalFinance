@@ -3,6 +3,8 @@
         "stdlib.h": "c",
         "element.h": "c",
         "page.h": "c",
-        "app.h": "c"
+        "app.h": "c",
+        "raymath.h": "c",
+        "elements.h": "c"
     }
 }
