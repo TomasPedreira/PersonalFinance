@@ -14,31 +14,12 @@
 
 #define MAX_EXPENSES 1024
 
-typedef enum {JOGO, SNACK, REFEICAO, LIVRO} expense_t;
-typedef struct {
-    size_t id;
-    float amount;
-    char* description;
-    expense_t type;
-} expense;
-typedef struct {
-    expense* expenses;
-    size_t num_expenses;
-    size_t max_expenses;
-} expenses;
+void render(app a);
+void input(app a);
+void update(app a);
 
-
-int init_expenses(expenses* expenses);
-void destroy_expenses(expenses* expenses);
-void print_list_of_expenses(expenses expenses);
-
-void render(app a, expenses expenses);
-void input(app a, expenses expenses);
-void update(app a, expenses expenses);
-
-void render_main_page(app a);
-void render_main_page_graph(app a);
-void render_main_page_nav_left(app a);
+void render_page(page p);
+void render_input(input_form in);
 
 drop_down create_drop_down(Vector2 start, Vector2 sizes, Color color1, Color color2, char* text, size_t font_size, size_t button_padding, char** buttons_text, size_t num_buttons){
     drop_down dd = malloc(sizeof(struct _Drop_drown));
@@ -52,13 +33,12 @@ drop_down create_drop_down(Vector2 start, Vector2 sizes, Color color1, Color col
     dd->height = sizes.y;
     dd->color1 = color1;
     dd->color2 = color2;
+    dd->selected = 0;
     size_t text_size = MeasureText(text, font_size);
     Vector2 text_pos = {start.x + sizes.x/2 - text_size/2, start.y + sizes.y/2 - font_size/2};
-    dd->text_pos = text_pos;
     dd->text = text;
     dd->hovering = false;
     dd->clicked = false;
-    dd->font_size = font_size;
     dd->button_padding = button_padding;
     dd->num_buttons = num_buttons;
 
@@ -95,63 +75,23 @@ drop_down create_drop_down(Vector2 start, Vector2 sizes, Color color1, Color col
 }
 
 
-void read_list_of_expenses(char* filename, expenses* expenses);
-
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Finance app");
     SetTargetFPS(60);
     SetExitKey(0);
     app a = create_app();
+
     if (a == NULL){
         printf("Error creating app\n");
         return 1;
     }
-    expenses expenses;
-    if (init_expenses(&expenses) != 0){
-        printf("Error initializing expenses\n");
-        return 1;
-    }
-    // erase after
-    const float graph_ratio = 0.6;
-    const size_t initx = 0;
-    const size_t inity = 0;
-    const size_t sizex = SCREEN_WIDTH*(1 - graph_ratio)-1;
-    const size_t sizey = SCREEN_HEIGHT;
-    // create a dropdown with 3 buttons
-
-    drop_down dd = create_drop_down((Vector2){initx + sizex/2 - 100, inity + 100}, (Vector2){200, 50}, BLACK, BLUE, "Options", 20, 10, (char*[]){"Option 1", "Option 2", "Option 3"}, 3);
-    if (dd == NULL){
-        printf("Error creating drop down\n");
-        return 1;
-    }
-    element e = malloc(sizeof(struct _element));
-    if (e == NULL){
-        printf("Error creating element\n");
-        return 1;
-    }
-    e->tag = DD;
-    e->page = MAIN_PAGE;
-    e->dd = dd;
-    printf("Adding element\n");
-    add_element(a, e);
-    printf("Element added\n");
 
     while (!WindowShouldClose()) {
-        input(a, expenses);
-        update(a, expenses);
-        render(a, expenses);
+        input(a);
+        update(a);
+        render(a);
     }
-    printf("Number of butons: %d\n", dd->num_buttons);
-    for (size_t i = 0; i < dd->num_buttons; i++){
-        printf("Freeing button %zu\n", dd->buttons[i]->font_size);
-        free(dd->buttons[i]);
-    }
-    free(dd->buttons);
-    free(dd);
-    free(e);
-    
     destroy_app(a);
-    destroy_expenses(&expenses);
     printf("Exiting\n");
 
     CloseWindow();
@@ -160,32 +100,80 @@ int main() {
     return 0;
 }
 
-void render(app a, expenses expenses){
+void render(app a){
     BeginDrawing();
-        switch (get_current_page(a))
-        {
-            case MAIN_PAGE:
-                render_main_page(a);
-                break;
-            case GAME:
-                break;
-            case GAME_OVER:
-                break;
-        }
+        page p = get_current_page(a);
+        render_page(p);
     EndDrawing();
 }
-void input(app a, expenses expenses){
-    if (IsKeyPressed(KEY_ONE)){
-        element e = get_element(a, 0);
-        e->dd->clicked = true;
-    }
-    if (IsKeyPressed(KEY_TWO)){
-        element e = get_element(a, 0);
-        e->dd->clicked = false;
+void input(app a){
+    page p = get_current_page(a);
+    for (size_t i = 0; i < p->num_elements; i++){
+        switch (p->elements[i]->tag)
+        {
+            case DD:
+                drop_down dd = p->elements[i]->dd;
+                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){dd->start.x, dd->start.y, dd->width, dd->height})){
+                    dd->hovering = true;
+                    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                        dd->clicked = !dd->clicked;
+                    }
+                } else {
+                    dd->hovering = false;
+                }
+                if (dd->clicked){
+                    for (size_t j = 0; j < dd->num_buttons; j++){
+                        if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){dd->buttons[j]->start.x, dd->buttons[j]->start.y, dd->buttons[j]->width, dd->buttons[j]->height})){
+                            dd->buttons[j]->hovering = true;
+                            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                                dd->selected = j;
+                                dd->clicked = false;
+                            }
+                        } else {
+                            dd->buttons[j]->hovering = false;
+                        }
+                    }
+                }
+                break;
+            case BTN:
+                button b = p->elements[i]->btn;
+                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){b->start.x, b->start.y, b->width, b->height})){
+                    b->hovering = true;
+                    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
+                        b->clicked = true;
+                        b->action(b->text);
+                    }
+                } else {
+                    b->hovering = false;
+                    b->clicked  = false;
+                }
+                break;
+            case IN:
+                input_form in = p->elements[i]->in;
+                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){in->start.x, in->start.y, in->width, in->height})){
+                    in->clicked = true;
+                } else {
+                    in->clicked = false;
+                }
+                if (in->clicked){
+                    if (IsKeyPressed(KEY_BACKSPACE)){
+                        in->text[strlen(in->text)-1] = '\0';
+                    } else {
+                        char c = GetCharPressed();
+                        if (c != 0 && strlen(in->text) < 1023){
+                            in->text[strlen(in->text)] = c;
+                            in->text[strlen(in->text)+1] = '\0';
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+        }
     }
 }
-void update(app a, expenses expenses){
-    switch (get_current_page(a))
+void update(app a){
+    switch (get_current_page(a)->type)
     {
         case MAIN_PAGE:
             break;
@@ -212,121 +200,66 @@ void render_button(button b, size_t offset){
     );
 }
 void render_drop_down(drop_down dd){
-    DrawRectangle(
-        dd->start.x,
-        dd->start.y,
-        dd->width,
-        dd->height,
-        dd->color1
-    );
-    DrawText(
-        dd->text,
-        dd->text_pos.x,
-        dd->text_pos.y,
-        dd->font_size,
-        dd->color2
-    );
-    if (dd->clicked)
+
+    if (dd->clicked){
+        DrawRectangle(
+            dd->start.x,
+            dd->start.y,
+            dd->width,
+            dd->height + dd->num_buttons*dd->height + dd->button_padding/2,
+            dd->color1
+        );
+        render_button(dd->buttons[dd->selected], 0);
         for (size_t i = 0; i < dd->num_buttons; i++){
             render_button(dd->buttons[i], (i+1) * dd->height + dd->button_padding/2);
         }
-}
-
-void render_main_page(app a){
-    Color color = {0, 96, 138, 255}; // lighter dark blue
-    ClearBackground(color);
-    render_main_page_graph(a);
-    render_main_page_nav_left(a);
-}
-
-void render_main_page_nav_left(app a){
-    const float graph_ratio = 0.6;
-    const size_t initx = 0;
-    const size_t inity = 0;
-    const size_t sizex = SCREEN_WIDTH*(1 - graph_ratio)-1;
-    const size_t sizey = SCREEN_HEIGHT;
-    const char* nav_left[] = {"Funds", "Stocks", "Crypto", "Settings"};
-    size_t funds_size = MeasureText(nav_left[0], 20);
-    DrawText(nav_left[0], initx + sizex/2 - funds_size/2, inity + 20, 20, RAYWHITE);
-
-    element e = get_element(a, 0);
-    render_drop_down(e->dd);
-}
-
-void render_main_page_graph(app a){
-    const size_t num_divs = 10;
-    const float graph_ratio = 0.60000;
-    const size_t initx = round((float)SCREEN_WIDTH*(1.0000 - graph_ratio));
-    const size_t inity = 0;
-    const size_t sizex = SCREEN_WIDTH*graph_ratio;
-    const size_t sizey = sizex;
-
-    Rectangle rec = {initx, 0, sizex, sizey};
-    Color color = {10, 0, 38, 255}; // dark blue
-    DrawRectangleRec(rec, color);
-    // draw grid
-    const size_t xstep = sizex/num_divs;
-    const size_t ystep = sizey/num_divs;
-    for (size_t i = 0; i < num_divs+1; i++){
-        DrawLine(initx + i*xstep, inity, initx + i*xstep, inity + sizey, RAYWHITE);
-        DrawLine(initx, inity + i*ystep, initx + sizex, inity + i * ystep, RAYWHITE);
+    } else {
+        DrawRectangle(
+            dd->start.x,
+            dd->start.y,
+            dd->width,
+            dd->height,
+            dd->color1
+        );
+        render_button(dd->buttons[dd->selected], 0);
     }
+    
+        
 }
-void read_list_of_expenses(char* filename, expenses* expenses){
-    FILE* f = fopen(filename, "r");
-    if (f == NULL){
-        printf("Error opening file\n");
-        return;
-    }
-    expense e;
-    size_t id;
-    while (fscanf(f, "%d;", &id) != EOF){
-        e.id = id;
-        char aux[1024];
-        char car = ' ';
-        fscanf(f, "%f;", &e.amount);
-        size_t i;
-        for (i = 0; (car = fgetc(f)) != ';'; i++)
-            {
-                aux[i] = car;                               //captura do nome do k navio
-            }
-        aux[i] = '\0';
-        fscanf(f, "%d;", &e.type);
-        e.description = malloc(sizeof(char)*(strlen(aux)+1));
-        strcpy(e.description, aux);
-        if (expenses->num_expenses == expenses->max_expenses){
-            printf("Max number of expenses reached, ignoring every expense now\n");
-            fclose(f);
-            return;
+
+
+void render_page(page p){
+    ClearBackground(p->color);
+    for (size_t i = 0; i < p->num_elements; i++){
+        switch (p->elements[i]->tag)
+        {
+            case DD:
+                render_drop_down(p->elements[i]->dd);
+                break;
+            case BTN:
+                render_button(p->elements[i]->btn, 0);
+                break;
+            case IN:
+                render_input(p->elements[i]->in);
+                break;
+            default:
+                break;
         }
-        expenses->expenses[id] = e;
-        expenses->num_expenses++;
-
     }
-    fclose(f);
 }
-
-int init_expenses(expenses* expenses){
-    expenses->expenses = malloc(MAX_EXPENSES*sizeof(expense));
-    if (expenses->expenses == NULL){
-        return 1;
-    }
-    expenses->num_expenses = 0;
-    expenses->max_expenses = MAX_EXPENSES;
-    read_list_of_expenses("expenses.txt", expenses);
-    print_list_of_expenses(*expenses);
-    return 0;
-}
-
-void destroy_expenses(expenses* expenses){
-    for (size_t i = 0; i < expenses->num_expenses; i++){
-        free(expenses->expenses[i].description);
-    }
-    free(expenses->expenses);
-}
-
-void print_list_of_expenses(expenses expenses){
-    for (size_t i = 0; i < expenses.num_expenses; i++){
-        printf("id: %d, amount: %f, description: %s, type: %d\n", expenses.expenses[i].id, expenses.expenses[i].amount, expenses.expenses[i].description, expenses.expenses[i].type);
-    }
+void render_input(input_form in){
+    DrawRectangle(
+        in->start.x,
+        in->start.y,
+        in->width,
+        in->height,
+        in->color1
+    );
+    DrawText(
+        in->text,
+        in->start.x + in->width/2 - MeasureText(in->text, in->font_size),
+        in->start.y + in->height/2 - in->font_size/2,
+        in->font_size,
+        in->color2
+    );
 }

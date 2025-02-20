@@ -18,6 +18,7 @@ struct _Button {
     bool hovering;
     bool clicked;
     size_t font_size;
+    void (*action)(char* txt);
 };
 
 typedef struct _Drop_drown * drop_down;
@@ -27,17 +28,39 @@ struct _Drop_drown {
     size_t height;
     Color color1;
     Color color2;
-    Vector2 text_pos;
     char* text;
     bool hovering;
     bool clicked;
-    size_t font_size;
+    size_t selected;
     size_t button_padding;
     button* buttons;
     size_t num_buttons;
 };
 
-typedef enum {DD, BTN, GRID} elem_tag;
+typedef struct _Input * input_form;
+struct _Input {
+    Vector2 start;
+    size_t width;
+    size_t height;
+    Color color1;
+    Color color2;
+    char* text;
+    size_t font_size;
+    bool clicked;
+};
+typedef struct _Text_box * text_box;
+struct _Text_box {
+    Vector2 start;
+    size_t width;
+    size_t height;
+    Color color1;
+    Color color2;
+    char* text;
+    size_t font_size;
+    bool clicked;
+};
+
+typedef enum {DD, BTN, GRID, IN} elem_tag;
 
 typedef struct _element * element;
 
@@ -47,6 +70,39 @@ struct _element {
     union {
         button btn;
         drop_down dd;
+        input_form in;
     };
 };
+
+typedef struct _Page * page;
+
+struct _Page {
+    ptype type;
+    Color color;
+    element* elements;
+    size_t num_elements;
+    size_t max_elements;
+};
+
+
+element create_button( 
+    Vector2 start,
+    size_t width, 
+    size_t height, 
+    Color color, 
+    Color text_color, 
+    char* text, 
+    size_t font_size,
+    void (*action)(char* txt)
+);
+
+element create_input(
+    Vector2 start,
+    size_t width, 
+    size_t height,
+    Color color1,
+    Color color2,
+    size_t font_size
+);
+
 #endif // __ELEMENTS_H__
