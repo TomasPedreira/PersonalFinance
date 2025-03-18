@@ -169,16 +169,16 @@ void input(app a){
                     in->clicked = false;
                 }
                 if (in->clicked){
-                    if (IsKeyPressed(KEY_BACKSPACE) && strlen(in->text) > 0){
-                        in->text[strlen(in->text)-1] = '\0';
-                    } else {
-                        char c = GetCharPressed();
-                        char h = 'h';
-                        if (c != 0 && strlen(in->text) < 1023){
-                            printf("Char: %c\n", 'l');
-                            in->text[strlen(in->text)] = h;
-                            in->text[strlen(in->text)+1] = '\0';
-                        }
+                    int len = strlen(in->text);
+                    if (IsKeyPressed(KEY_BACKSPACE) && len > 0){
+                        in->text[len-1] = '\0';
+                    } 
+
+                    char c = GetCharPressed();
+                    if (c != 0 && len < 1023){
+                        printf("Char: %c\n", c);
+                        in->text[len] = c;
+                        in->text[len+1] = '\0';
                     }
                 }
                 break;
@@ -194,7 +194,6 @@ void update(app a){
         Vector2 start = {a->width, a->height};
         Vector2 end = {GetScreenWidth(), GetScreenHeight()};
         for (size_t i=0; i < a->pages[p]->num_elements; i++){
-
             resize_element(a->pages[p]->elements[i], start, end);
         }
         a->width = end.x;
