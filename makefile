@@ -1,8 +1,8 @@
 CC = gcc
 
-RAYLIB_PATH = C:/vcpkg/installed/x64-windows/
-CFLAGS = -I$(RAYLIB_PATH)include -I.
-LDFLAGS = -L$(RAYLIB_PATH)lib -lraylib -lopengl32 -lgdi32 -lwinmm
+RAYLIB_PATH = ../raylib
+CFLAGS = -I$(RAYLIB_PATH)/include -I.
+LDFLAGS = -L$(RAYLIB_PATH)/lib -lraylib -lGL -lGLU -lm -lpthread -ldl -lrt -lX11
 
 TARGET = program
 SRC = $(wildcard *.c)
@@ -13,4 +13,4 @@ $(TARGET): $(SRC)
 	$(CC) -o $(TARGET) $(SRC) $(CFLAGS) $(LDFLAGS)
 
 clean:
-	del $(TARGET).exe
+	rm -f $(TARGET)
