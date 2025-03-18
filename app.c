@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <string.h>
 #include "elements.h"
 #include "app.h"
 
@@ -12,6 +13,43 @@
 
 void onClickPrint(char* text){
     printf("%s\n",  text);
+}
+
+void onClickMae(page cur_p){
+    for (size_t i=0; i<cur_p->num_elements; i++){
+        switch (cur_p->elements[i]->tag)
+        {
+            case BTN:
+                free(cur_p->elements[i]->btn);
+                break;
+            case DD:
+                free(cur_p->elements[i]->dd);
+                break;
+            case GRID:
+                break;
+            case IN:
+                if (!strcmp(cur_p->elements[i]->in->text, "AVISO ENVIADO")){
+                    printf("Aviso enviado\n");
+                    return;
+                }
+            default:
+                break;
+        }
+        
+    }
+    element in = create_input(
+        (Vector2){SCREEN_WIDTH/2 - 200/2, 0},
+        200,
+        50,
+        BLUE,
+        BLACK,
+        "AVISO ENVIADO",
+        20
+    );
+    cur_p->elements[cur_p->num_elements] = in;
+    cur_p->num_elements++;
+    
+
 }
 
 page create_main_page(){
@@ -34,43 +72,36 @@ page create_main_page(){
         50,
         BLUE,
         BLACK,
-        "ADD",
+        "MAE",
         20,
         onClickPrint
     );
     p->num_elements++;
     p->elements[p->num_elements] = create_button(
-        (Vector2){SCREEN_WIDTH/2 - 200/2, SCREEN_HEIGHT/2 - 300/2},
+        (Vector2){SCREEN_WIDTH/2 - 200/2, SCREEN_HEIGHT/2 - 400/2},
         200,
         50,
         BLUE,
         BLACK,
-        "DELETE",
+        "TOMAS",
         20,
         onClickPrint
     );
     p->num_elements++;
-    p->elements[p->num_elements] = create_button(
-        (Vector2){SCREEN_WIDTH/2 - 200/2, SCREEN_HEIGHT/2 - 500/2},
+    element in = create_input(
+        (Vector2){SCREEN_WIDTH/2 - 200/2, 0},
         200,
         50,
         BLUE,
         BLACK,
-        "LOAD",
-        20,
-        onClickPrint
-    );
-    p->num_elements++;
-    p->elements[p->num_elements] = create_input(
-        (Vector2){0,0},
-        500,
-        50,
-        BLUE,
-        BLACK,
+        "AVISO ENVIADO",
         20
     );
+    p->elements[p->num_elements] = in;
     p->num_elements++;
-    
+    p->elements[p->num_elements-1]->visible = false;
+    p->elements[p->num_elements-1]->enabled = false;
+
     return p;
 }
 app create_app(){
@@ -79,6 +110,8 @@ app create_app(){
     page p = create_main_page();
     a->pages[0] = p;
     a->num_pages = 1;
+    a->width = SCREEN_WIDTH;
+    a->height = SCREEN_HEIGHT;
     return a;
 }
 void destroy_app(app a){
@@ -95,7 +128,6 @@ void destroy_app(app a){
                 case GRID:
                     break;
                 case IN:
-                    free(a->pages[i]->elements[j]->in->text);
                     free(a->pages[i]->elements[j]->in);
                     break;
                 default:

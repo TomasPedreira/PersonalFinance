@@ -42,6 +42,8 @@ element create_button(
     e->tag = BTN;
     e->page = MAIN_PAGE;
     e->btn = b;
+    e->visible = true;
+    e->enabled = true;
     return e;
 
 }
@@ -52,6 +54,7 @@ element create_input(
     size_t height,
     Color color1,
     Color color2,
+    char* text,
     size_t font_size
 
 ){
@@ -64,12 +67,7 @@ element create_input(
     i->height = height;
     i->color1 = color1;
     i->color2 = color2;
-    i->text = malloc(1024*sizeof(char));
-    if (i->text == NULL){
-        free(i);
-        return NULL;
-    }
-    strcpy(i->text, "text");
+    strcpy(i->text, text);
     i->font_size = font_size;   
     element e = malloc(sizeof(struct _element));
     if (e == NULL){
@@ -79,5 +77,7 @@ element create_input(
     e->tag = IN;
     e->page = MAIN_PAGE;
     e->in = i;
+    e->visible = true;
+    e->enabled = true;
     return e;
 }

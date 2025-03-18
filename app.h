@@ -7,6 +7,8 @@ struct _app_sate {
     ptype current_page;
     page pages[16];
     size_t num_pages;
+    int width;
+    int height;	
 };
 
 

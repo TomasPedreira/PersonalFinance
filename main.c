@@ -3,16 +3,15 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <string.h>
-
 #include "app.h"
 #include "elements.h"
+
 
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 #define SCALING_FACTOR 200
 
-#define MAX_EXPENSES 1024
 
 void render(app a);
 void input(app a);
@@ -71,14 +70,18 @@ drop_down create_drop_down(Vector2 start, Vector2 sizes, Color color1, Color col
         buttons[i] = b;
     }
     dd->buttons = buttons;
-    return dd;
+    return dd;}
+void sendWarning(){
+    printf("lolada");
 }
-
+void resize_element(element e, Vector2 start, Vector2 end);
 
 int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Finance app");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "chamar tomas");
     SetTargetFPS(60);
     SetExitKey(0);
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowState(FLAG_WINDOW_MAXIMIZED);
     app a = create_app();
 
     if (a == NULL){
@@ -109,6 +112,9 @@ void render(app a){
 void input(app a){
     page p = get_current_page(a);
     for (size_t i = 0; i < p->num_elements; i++){
+        if (!p->elements[i]->enabled){
+            continue;
+        }
         switch (p->elements[i]->tag)
         {
             case DD:
@@ -141,6 +147,11 @@ void input(app a){
                     b->hovering = true;
                     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
                         b->clicked = true;
+                        if (strcmp(b->text, "MAE") == 0){
+                            p->elements[2]->visible = !p->elements[2]->visible;
+                            p->elements[2]->enabled = !p->elements[2]->enabled; 
+                            sendWarning();
+                        }
                         b->action(b->text);
                     }
                 } else {
@@ -150,18 +161,22 @@ void input(app a){
                 break;
             case IN:
                 input_form in = p->elements[i]->in;
-                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){in->start.x, in->start.y, in->width, in->height})){
+                if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){in->start.x, in->start.y, in->width, in->height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
                     in->clicked = true;
-                } else {
+                    printf("Clicked wtf is going on\n");
+                } 
+                if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !CheckCollisionPointRec(GetMousePosition(), (Rectangle){in->start.x, in->start.y, in->width, in->height})){
                     in->clicked = false;
                 }
                 if (in->clicked){
-                    if (IsKeyPressed(KEY_BACKSPACE)){
+                    if (IsKeyPressed(KEY_BACKSPACE) && strlen(in->text) > 0){
                         in->text[strlen(in->text)-1] = '\0';
                     } else {
                         char c = GetCharPressed();
+                        char h = 'h';
                         if (c != 0 && strlen(in->text) < 1023){
-                            in->text[strlen(in->text)] = c;
+                            printf("Char: %c\n", 'l');
+                            in->text[strlen(in->text)] = h;
                             in->text[strlen(in->text)+1] = '\0';
                         }
                     }
@@ -173,6 +188,19 @@ void input(app a){
     }
 }
 void update(app a){
+    ptype p = get_current_page(a)->type;
+    if (IsWindowResized()){
+        printf("Resizing\n");
+        Vector2 start = {a->width, a->height};
+        Vector2 end = {GetScreenWidth(), GetScreenHeight()};
+        for (size_t i=0; i < a->pages[p]->num_elements; i++){
+
+            resize_element(a->pages[p]->elements[i], start, end);
+        }
+        a->width = end.x;
+        a->height = end.y;
+    }
+    
     switch (get_current_page(a)->type)
     {
         case MAIN_PAGE:
@@ -184,6 +212,7 @@ void update(app a){
     }
 }
 void render_button(button b, size_t offset){
+    
     DrawRectangle(
         b->start.x,
         b->start.y + offset,
@@ -231,6 +260,9 @@ void render_drop_down(drop_down dd){
 void render_page(page p){
     ClearBackground(p->color);
     for (size_t i = 0; i < p->num_elements; i++){
+        if (!p->elements[i]->visible){
+            continue;
+        }
         switch (p->elements[i]->tag)
         {
             case DD:
@@ -257,9 +289,76 @@ void render_input(input_form in){
     );
     DrawText(
         in->text,
-        in->start.x + in->width/2 - MeasureText(in->text, in->font_size),
+        in->start.x + in->width/2 - MeasureText(in->text, in->font_size)/2,
         in->start.y + in->height/2 - in->font_size/2,
         in->font_size,
         in->color2
     );
+    if (in->clicked){
+        Rectangle outline = {
+            in->start.x,
+            in->start.y,
+            in->width,
+            in->height
+        };
+        DrawRectangleLinesEx(outline, 2, BLACK);
+        Vector2 cursor_pos = (Vector2){in->start.x + in->width/2 + MeasureText(in->text, in->font_size)/2 +2, in->start.y + in->height/2 - in->font_size/2};
+        DrawLine(cursor_pos.x, cursor_pos.y, cursor_pos.x, cursor_pos.y + in->font_size, BLACK);
+    }
+}
+
+void resize_drop_down(drop_down dd, Vector2 start, Vector2 end){
+    dd->start = (Vector2){dd->start.x*end.x/start.x, dd->start.y*end.y/start.y};
+    dd->width = dd->width*end.x/start.x;
+    dd->height = dd->height*end.y/start.y;
+    size_t new_button_padding = dd->button_padding*end.y/start.y;
+    dd->button_padding = new_button_padding;
+    for (size_t i = 0; i < dd->num_buttons; i++){
+        button b = dd->buttons[i];
+        b->start = (Vector2){b->start.x*end.x/start.x, b->start.y*end.y/start.y};
+        b->width = b->width*end.x/start.x;
+        b->height = b->height*end.y/start.y;
+        b->text_pos = (Vector2){b->start.x + b->width/2 - MeasureText(b->text, b->font_size)/2, b->start.y + b->height/2 - b->font_size/2};
+    }
+}
+void resize_button(button b, Vector2 start, Vector2 end){
+    size_t new_width = end.x*b->width/start.x;
+    size_t new_height = end.y*b->height/start.y;
+    b->width = new_width;
+    b->height = new_height;
+    size_t new_x = end.x*b->start.x/start.x;
+    size_t new_y = end.y*b->start.y/start.y;
+    b->start = (Vector2){new_x, new_y};
+    size_t new_font = end.y*b->font_size/start.y;
+    size_t text_size = MeasureText(b->text, b->font_size);
+    b->text_pos = (Vector2){b->start.x + b->width/2 - text_size/2, b->start.y + b->height/2 - b->font_size/2};
+
+}
+void resize_input(input_form in, Vector2 start, Vector2 end){
+    size_t new_width = end.x*in->width/start.x;
+    size_t new_height = end.y*in->height/start.y;
+    in->width = new_width;
+    in->height = new_height;
+    size_t new_x = end.x*in->start.x/start.x;
+    size_t new_y = end.y*in->start.y/start.y;
+    in->start = (Vector2){new_x, new_y};
+    size_t new_font = end.y*in->font_size/start.y;
+}
+
+
+void resize_element(element e,Vector2 start, Vector2 end){
+    switch (e->tag)
+    {
+        case DD:
+            resize_drop_down(e->dd, start, end);
+            break;
+        case BTN:
+            resize_button(e->btn, start, end);
+            break;
+        case IN:
+            resize_input(e->in, start, end);
+            break;
+        default:
+            break;
+    }
 }

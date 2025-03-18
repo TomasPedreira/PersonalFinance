@@ -44,7 +44,7 @@ struct _Input {
     size_t height;
     Color color1;
     Color color2;
-    char* text;
+    char text[1024];
     size_t font_size;
     bool clicked;
 };
@@ -55,7 +55,7 @@ struct _Text_box {
     size_t height;
     Color color1;
     Color color2;
-    char* text;
+    char text[1024];
     size_t font_size;
     bool clicked;
 };
@@ -72,6 +72,8 @@ struct _element {
         drop_down dd;
         input_form in;
     };
+    bool visible;
+    bool enabled;
 };
 
 typedef struct _Page * page;
@@ -102,6 +104,7 @@ element create_input(
     size_t height,
     Color color1,
     Color color2,
+    char* text,
     size_t font_size
 );
 
