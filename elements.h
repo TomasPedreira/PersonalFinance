@@ -1,8 +1,8 @@
 #ifndef __ELEMENTS_H__
 #define __ELEMENTS_H__
 
-#include <raylib.h>
-#include <raymath.h>
+#include "raylib.h"
+#include "raymath.h"
 
 typedef enum page_type ptype;
 enum page_type {MAIN_PAGE, GAME, GAME_OVER};

@@ -1,4 +1,6 @@
+.gitignore
 *.dll
 *.exe
+*.md
 makefile
 todo
