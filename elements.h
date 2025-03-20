@@ -14,7 +14,7 @@ struct _Button {
     Color color;
     Color text_color;
     Vector2 text_pos;
-    char* text;
+    char text[1024];
     bool hovering;
     bool clicked;
     size_t font_size;
@@ -28,7 +28,7 @@ struct _Drop_drown {
     size_t height;
     Color color1;
     Color color2;
-    char* text;
+    char text[1024];
     bool hovering;
     bool clicked;
     size_t selected;
@@ -60,7 +60,16 @@ struct _Text_box {
     bool clicked;
 };
 
-typedef enum {DD, BTN, GRID, IN} elem_tag;
+typedef struct _Panel * panel;
+struct _Panel {
+    Vector2 start;
+    size_t width;
+    size_t height;
+    Color color;
+};
+
+
+typedef enum {DD, BTN, IN, PNL} elem_tag;
 
 typedef struct _element * element;
 
@@ -71,6 +80,7 @@ struct _element {
         button btn;
         drop_down dd;
         input_form in;
+        panel pnl;
     };
     bool visible;
     bool enabled;
@@ -107,5 +117,19 @@ element create_input(
     char* text,
     size_t font_size
 );
+
+element create_panel(
+    Vector2 start,
+    size_t width, 
+    size_t height,
+    Color color
+);
+
+void destroy_drop_down(drop_down dd);
+void destroy_button(button b);
+void destroy_input(input_form in);
+void destroy_panel(panel p);
+void destroy_text_box(text_box tb);
+
 
 #endif // __ELEMENTS_H__

@@ -15,43 +15,6 @@ void onClickPrint(char* text){
     printf("%s\n",  text);
 }
 
-void onClickMae(page cur_p){
-    for (size_t i=0; i<cur_p->num_elements; i++){
-        switch (cur_p->elements[i]->tag)
-        {
-            case BTN:
-                free(cur_p->elements[i]->btn);
-                break;
-            case DD:
-                free(cur_p->elements[i]->dd);
-                break;
-            case GRID:
-                break;
-            case IN:
-                if (!strcmp(cur_p->elements[i]->in->text, "AVISO ENVIADO")){
-                    printf("Aviso enviado\n");
-                    return;
-                }
-            default:
-                break;
-        }
-        
-    }
-    element in = create_input(
-        (Vector2){SCREEN_WIDTH/2 - 200/2, 0},
-        200,
-        50,
-        BLUE,
-        BLACK,
-        "AVISO ENVIADO",
-        20
-    );
-    cur_p->elements[cur_p->num_elements] = in;
-    cur_p->num_elements++;
-    
-
-}
-
 page create_main_page(){
     const size_t max_pages = 10;
     page p = malloc(sizeof(struct _Page));
@@ -66,41 +29,16 @@ page create_main_page(){
     }
     p->num_elements = 0;
     p->color = WHITE;    
-    p->elements[p->num_elements] = create_button(
-        (Vector2){SCREEN_WIDTH/2 - 200/2, SCREEN_HEIGHT/2 - 100/2},
-        200,
-        50,
-        BLUE,
-        BLACK,
-        "MAE",
-        20,
-        onClickPrint
-    );
-    p->num_elements++;
-    p->elements[p->num_elements] = create_button(
-        (Vector2){SCREEN_WIDTH/2 - 200/2, SCREEN_HEIGHT/2 - 400/2},
-        200,
-        50,
-        BLUE,
-        BLACK,
-        "TOMAS",
-        20,
-        onClickPrint
-    );
-    p->num_elements++;
-    element in = create_input(
-        (Vector2){SCREEN_WIDTH/2 - 200/2, 0},
-        200,
-        50,
-        BLUE,
-        BLACK,
-        "AVISO ENVIADO",
-        20
-    );
-    p->elements[p->num_elements] = in;
-    p->num_elements++;
-    p->elements[p->num_elements-1]->visible = false;
-    p->elements[p->num_elements-1]->enabled = false;
+    
+    // task creation panelanel 
+    p->elements[p->num_elements++] = create_panel(
+        (Vector2){0,0},
+        SCREEN_WIDTH*0.2,
+        SCREEN_HEIGHT,
+        (Color){24,28,79,255}
+        );
+
+    
 
     return p;
 }
@@ -120,15 +58,16 @@ void destroy_app(app a){
             switch (a->pages[i]->elements[j]->tag)
             {
                 case BTN:
-                    free(a->pages[i]->elements[j]->btn);
+                    destroy_button(a->pages[i]->elements[j]->btn);
                     break;
                 case DD:
-                    free(a->pages[i]->elements[j]->dd);
+                    destroy_drop_down(a->pages[i]->elements[j]->dd);
                     break;
-                case GRID:
+                case PNL:
+                    destroy_panel(a->pages[i]->elements[j]->pnl);
                     break;
                 case IN:
-                    free(a->pages[i]->elements[j]->in);
+                    destroy_input(a->pages[i]->elements[j]->in);
                     break;
                 default:
                     break;

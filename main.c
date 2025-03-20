@@ -18,66 +18,20 @@ void input(app a);
 void update(app a);
 
 void render_page(page p);
+void render_panel(panel pnl);
 void render_input(input_form in);
+void render_button(button b, size_t offset);
+void render_drop_down(drop_down dd);
 
-drop_down create_drop_down(Vector2 start, Vector2 sizes, Color color1, Color color2, char* text, size_t font_size, size_t button_padding, char** buttons_text, size_t num_buttons){
-    drop_down dd = malloc(sizeof(struct _Drop_drown));
-    printf("Creating drop down\n");
-    if(dd == NULL){
-        printf("Error creating drop down inside creation\n");
-        return NULL;
-    }
-    dd->start = start;
-    dd->width = sizes.x;
-    dd->height = sizes.y;
-    dd->color1 = color1;
-    dd->color2 = color2;
-    dd->selected = 0;
-    size_t text_size = MeasureText(text, font_size);
-    Vector2 text_pos = {start.x + sizes.x/2 - text_size/2, start.y + sizes.y/2 - font_size/2};
-    dd->text = text;
-    dd->hovering = false;
-    dd->clicked = false;
-    dd->button_padding = button_padding;
-    dd->num_buttons = num_buttons;
 
-    button* buttons;
-    buttons = malloc(num_buttons*sizeof(button));
-    printf("Creating buttons\n");
-    if (buttons == NULL){
-        printf("Error creating buttons inside creation\n");
-        return NULL;
-    }
-    for (size_t i = 0; i < num_buttons; i++){
-        button b = malloc(sizeof(struct _Button));
-        printf("Creating button %zu\n", i);
-        if (b == NULL){
-            printf("Error creating button %zu\n", i);
-            return NULL;
-        }
-        b->start = (Vector2){start.x+button_padding/2, start.y + button_padding/2};
-        b->width = sizes.x - button_padding;
-        b->height = sizes.y - button_padding;
-        b->color = color2;
-        b->text = buttons_text[i];
-        b->text_color = RAYWHITE;
-        text_size = MeasureText(b->text, font_size);
-        b->text_pos = (Vector2){b->start.x + b->width/2 - text_size/2, b->start.y + b->height/2 - font_size/2};
-        
-        b->hovering = false;
-        b->clicked = false;
-        b->font_size = font_size;
-        buttons[i] = b;
-    }
-    dd->buttons = buttons;
-    return dd;}
-void sendWarning(){
-    printf("lolada");
-}
 void resize_element(element e, Vector2 start, Vector2 end);
+void resize_button(button b, Vector2 start, Vector2 end);
+void resize_drop_down(drop_down dd, Vector2 start, Vector2 end);
+void resize_input(input_form in, Vector2 start, Vector2 end);
 
+// Main loop
 int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "chamar tomas");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "todo app");
     SetTargetFPS(60);
     SetExitKey(0);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
@@ -102,7 +56,6 @@ int main() {
 
     return 0;
 }
-
 void render(app a){
     BeginDrawing();
         page p = get_current_page(a);
@@ -150,7 +103,6 @@ void input(app a){
                         if (strcmp(b->text, "MAE") == 0){
                             p->elements[2]->visible = !p->elements[2]->visible;
                             p->elements[2]->enabled = !p->elements[2]->enabled; 
-                            sendWarning();
                         }
                         b->action(b->text);
                     }
@@ -169,16 +121,16 @@ void input(app a){
                     in->clicked = false;
                 }
                 if (in->clicked){
-                    if (IsKeyPressed(KEY_BACKSPACE) && strlen(in->text) > 0){
-                        in->text[strlen(in->text)-1] = '\0';
-                    } else {
-                        char c = GetCharPressed();
-                        int len = strlen(in->text);
-                        if (c != 0 && len < 1023){                            
-                            printf("Char: %c\n", c);
-                            in->text[len] = c;
-                            in->text[len+1] = '\0';
-                        }
+                    int len = strlen(in->text);
+                    if (IsKeyPressed(KEY_BACKSPACE) && len > 0){
+                        in->text[len-1] = '\0';
+                    } 
+
+                    char c = GetCharPressed();
+                    if (c != 0 && len < 1023){
+                        printf("Char: %c\n", c);
+                        in->text[len] = c;
+                        in->text[len+1] = '\0';
                     }
                 }
                 break;
@@ -194,7 +146,6 @@ void update(app a){
         Vector2 start = {a->width, a->height};
         Vector2 end = {GetScreenWidth(), GetScreenHeight()};
         for (size_t i=0; i < a->pages[p]->num_elements; i++){
-
             resize_element(a->pages[p]->elements[i], start, end);
         }
         a->width = end.x;
@@ -211,6 +162,8 @@ void update(app a){
             break;
     }
 }
+
+// Rendering functions
 void render_button(button b, size_t offset){
     
     DrawRectangle(
@@ -255,8 +208,6 @@ void render_drop_down(drop_down dd){
     
         
 }
-
-
 void render_page(page p){
     ClearBackground(p->color);
     for (size_t i = 0; i < p->num_elements; i++){
@@ -273,6 +224,9 @@ void render_page(page p){
                 break;
             case IN:
                 render_input(p->elements[i]->in);
+                break;
+            case PNL:
+                render_panel(p->elements[i]->pnl);
                 break;
             default:
                 break;
@@ -306,7 +260,17 @@ void render_input(input_form in){
         DrawLine(cursor_pos.x, cursor_pos.y, cursor_pos.x, cursor_pos.y + in->font_size, BLACK);
     }
 }
+void render_panel(panel pnl){
+    DrawRectangle(
+        pnl->start.x,
+        pnl->start.y,
+        pnl->width,
+        pnl->height,
+        pnl->color
+    );
+}
 
+// Resizing functions
 void resize_drop_down(drop_down dd, Vector2 start, Vector2 end){
     dd->start = (Vector2){dd->start.x*end.x/start.x, dd->start.y*end.y/start.y};
     dd->width = dd->width*end.x/start.x;
@@ -344,7 +308,15 @@ void resize_input(input_form in, Vector2 start, Vector2 end){
     in->start = (Vector2){new_x, new_y};
     size_t new_font = end.y*in->font_size/start.y;
 }
-
+void resize_panel(panel pnl, Vector2 start, Vector2 end){
+    size_t new_width = end.x*pnl->width/start.x;
+    size_t new_height = end.y*pnl->height/start.y;
+    pnl->width = new_width;
+    pnl->height = new_height;
+    size_t new_x = end.x*pnl->start.x/start.x;
+    size_t new_y = end.y*pnl->start.y/start.y;
+    pnl->start = (Vector2){new_x, new_y};
+}
 
 void resize_element(element e,Vector2 start, Vector2 end){
     switch (e->tag)
@@ -358,7 +330,11 @@ void resize_element(element e,Vector2 start, Vector2 end){
         case IN:
             resize_input(e->in, start, end);
             break;
+        case PNL:
+            resize_panel(e->pnl, start, end);
+            break;
         default:
             break;
     }
 }
+
