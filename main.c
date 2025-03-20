@@ -173,11 +173,11 @@ void input(app a){
                         in->text[strlen(in->text)-1] = '\0';
                     } else {
                         char c = GetCharPressed();
-                        char h = 'h';
-                        if (c != 0 && strlen(in->text) < 1023){
-                            printf("Char: %c\n", 'l');
-                            in->text[strlen(in->text)] = h;
-                            in->text[strlen(in->text)+1] = '\0';
+                        int len = strlen(in->text);
+                        if (c != 0 && len < 1023){                            
+                            printf("Char: %c\n", c);
+                            in->text[len] = c;
+                            in->text[len+1] = '\0';
                         }
                     }
                 }
