@@ -2,6 +2,7 @@
 #include <raymath.h>
 #include <string.h>
 #include <stdlib.h>
+#include "config.h"
 #include "elements.h"
 
 

@@ -1,4 +1,3 @@
-*.dll
-*.exe
+build
 makefile
-todo
+todo.md

@@ -4,12 +4,12 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <string.h>
+#include "config.h"
 #include "elements.h"
 #include "app.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define SCALING_FACTOR 200
+
+
 
 void onClickPrint(char* text){
     printf("%s\n",  text);
