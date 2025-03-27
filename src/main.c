@@ -31,7 +31,7 @@ int main() {
     SetTargetFPS(60);
     SetExitKey(0);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
-    SetWindowState(FLAG_WINDOW_MAXIMIZED);
+    // SetWindowState(FLAG_WINDOW_MAXIMIZED);
     app a = create_app();
 
     if (a == NULL){
@@ -96,10 +96,6 @@ void input(app a){
                     b->hovering = true;
                     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
                         b->clicked = true;
-                        if (strcmp(b->text, "MAE") == 0){
-                            p->elements[2]->visible = !p->elements[2]->visible;
-                            p->elements[2]->enabled = !p->elements[2]->enabled; 
-                        }
                         b->action(b->text);
                     }
                 } else {
@@ -111,7 +107,6 @@ void input(app a){
                 input_form in = p->elements[i]->in;
                 if (CheckCollisionPointRec(GetMousePosition(), (Rectangle){in->start.x, in->start.y, in->width, in->height}) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
                     in->clicked = true;
-                    printf("Clicked wtf is going on\n");
                 } 
                 if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !CheckCollisionPointRec(GetMousePosition(), (Rectangle){in->start.x, in->start.y, in->width, in->height})){
                     in->clicked = false;
@@ -120,11 +115,13 @@ void input(app a){
                     int len = strlen(in->text);
                     if (IsKeyPressed(KEY_BACKSPACE) && len > 0){
                         in->text[len-1] = '\0';
+                        if (len == 1){
+                            in->changed = false;
+                        }
                     } 
-
                     char c = GetCharPressed();
                     if (c != 0 && len < 1023){
-                        printf("Char: %c\n", c);
+                        in->changed = true;
                         in->text[len] = c;
                         in->text[len+1] = '\0';
                     }
@@ -237,13 +234,78 @@ void render_input(input_form in){
         in->height,
         in->color1
     );
-    DrawText(
-        in->text,
-        in->start.x + in->width/2 - MeasureText(in->text, in->font_size)/2,
-        in->start.y + in->height/2 - in->font_size/2,
-        in->font_size,
-        in->color2
-    );
+    // drawing text inside the box, adding /n whenever the text is too long
+    int num_of_lines = 0;
+    char buffer[1024][1024];
+    size_t buffer_index = 0;
+    int len = strlen(in->text);
+    bool centered = true;
+    // draw text
+    if (in->changed){
+        if (len > 0){
+            for (size_t i = 0 ; i < len; i++){
+                
+                buffer[num_of_lines][buffer_index] = in->text[i];
+                buffer[num_of_lines][buffer_index+1] = '\0';
+                if (MeasureText(buffer[num_of_lines], in->font_size) > (in->width*(1 - INBOX_PADDING * 2))){
+                    centered = false;
+                    buffer[num_of_lines++][buffer_index] = '\0';
+                    buffer_index = 0;
+                    buffer[num_of_lines][buffer_index] = in->text[i];
+                    buffer[num_of_lines][buffer_index+1] = '\0';
+                }
+                buffer_index++;
+            }
+            const int max_lines = (in->height*(1 - INBOX_PADDING * 2)) / in->font_size;
+            // pront every line of text
+            for (int i = 0; i < num_of_lines + 1; i++){
+                printf("%d: %s\n",i, buffer[i]);
+            }
+            
+            int starting_index = 0;
+            if (num_of_lines >= max_lines){
+                starting_index = num_of_lines+1 - max_lines;
+            }
+            for (int i = starting_index; i < num_of_lines + 1  ; i++){
+                Vector2 start_pos = (Vector2){
+                    in->start.x + in->width  * INBOX_PADDING + centered * ((in->width  * (1-INBOX_PADDING*2)) - MeasureText(buffer[i], in->font_size))/2,
+                    in->start.y + in->height * INBOX_PADDING + centered * ((in->height * (1-INBOX_PADDING*2)) - in->font_size)/2 + i*in->font_size 
+                };
+                if (num_of_lines >= max_lines ){
+                    start_pos.y = in->start.y + in->height * INBOX_PADDING + centered * ((in->height * (1-INBOX_PADDING*2)) - in->font_size)/2 + (i-starting_index)*in->font_size;
+                }
+                DrawText(
+                    buffer[i],
+                    start_pos.x,
+                    start_pos.y,
+                    in->font_size,
+                    in->color2
+                );
+                if (i == num_of_lines){
+                    DrawLine(
+                        start_pos.x + MeasureText(buffer[i], in->font_size),
+                        start_pos.y,
+                        start_pos.x + MeasureText(buffer[i], in->font_size),
+                        start_pos.y + in->font_size,
+                        in->color2
+                    );
+                }
+            }
+            
+        }
+
+    }else{
+        DrawText(
+            in->placeholder,
+            in->start.x + in->width * INBOX_PADDING  +  ((in->width  * (1-INBOX_PADDING*2)) - MeasureText(in->placeholder, in->font_size))/2,
+            in->start.y + in->height * INBOX_PADDING +  ((in->height * (1-INBOX_PADDING*2)) - in->font_size)/2,
+            in->font_size,
+            in->color2
+        );
+    }
+    
+    
+    // drawing outline and cursor
     if (in->clicked){
         Rectangle outline = {
             in->start.x,
@@ -251,10 +313,20 @@ void render_input(input_form in){
             in->width,
             in->height
         };
-        DrawRectangleLinesEx(outline, 2, BLACK);
-        Vector2 cursor_pos = (Vector2){in->start.x + in->width/2 + MeasureText(in->text, in->font_size)/2 +2, in->start.y + in->height/2 - in->font_size/2};
-        DrawLine(cursor_pos.x, cursor_pos.y, cursor_pos.x, cursor_pos.y + in->font_size, BLACK);
+        DrawRectangleLinesEx(outline, 2, in->color2);
+        Vector2 cursor_pos = {
+            in->start.x + in->width * INBOX_PADDING +  ((in->width * (1-INBOX_PADDING*2)) - MeasureText(in->placeholder, in->font_size))/2 + MeasureText(in->placeholder, in->font_size),
+            in->start.y + in->height * INBOX_PADDING +  ((in->height * (1-INBOX_PADDING*2)) - in->font_size)/2, 
+        };
+        
+        int index = -1;
+        char last_line[1024];
+        
+            
+            
+
     }
+
 }
 void render_panel(panel pnl){
     DrawRectangle(

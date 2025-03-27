@@ -8,7 +8,7 @@ TARGET = program
 SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
 
-all: build $(TARGET)
+all:  build $(TARGET) clean
 
 build:
 	mkdir build
@@ -20,6 +20,8 @@ build/%.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 clean:
-	del /q build\*.o
-	del /q build\$(TARGET).exe
-	rmdir /q /s build
+	rm -f build/*.o
+
+
+
+

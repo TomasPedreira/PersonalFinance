@@ -55,6 +55,7 @@ element create_input(
     Color color1,
     Color color2,
     char* text,
+    char * placeholder,
     size_t font_size
 
 ){
@@ -67,7 +68,9 @@ element create_input(
     i->height = height;
     i->color1 = color1;
     i->color2 = color2;
-    strcpy(i->text, text);
+    strcpy(i->placeholder, placeholder);
+    i->changed = false;
+    i->clicked = false;
     i->font_size = font_size;   
     element e = malloc(sizeof(struct _element));
     if (e == NULL){

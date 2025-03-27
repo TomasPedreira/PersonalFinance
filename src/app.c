@@ -12,17 +12,17 @@
 
 
 void onClickPrint(char* text){
-    printf("%s\n",  text);
+    printf("Button pressed: %s\n",  text);
 }
 
 page create_main_page(){
-    const size_t max_pages = 10;
+    const size_t max_elements = 16;
     page p = malloc(sizeof(struct _Page));
     if (p == NULL){
         return NULL;
     }
     p->type = MAIN_PAGE;
-    p->elements = malloc(max_pages*sizeof(element));
+    p->elements = malloc(max_elements*sizeof(element));
     if (p->elements == NULL){
         free(p);
         return NULL;
@@ -32,12 +32,47 @@ page create_main_page(){
     
     // task creation panelanel 
     p->elements[p->num_elements++] = create_panel(
-        (Vector2){0,0},
-        SCREEN_WIDTH*0.2,
-        SCREEN_HEIGHT,
-        (Color){24,28,79,255}
-        );
-
+        MAIN_PAGE_LEFT_PANEL_START,
+        MAIN_PAGE_LEFT_PANEL_WIDTH,
+        MAIN_PAGE_LEFT_PANEL_HEIGHT,
+        MAIN_PAGE_LEFT_PANEL_COLOR
+    );
+    p->elements[p->num_elements++] = create_panel(
+        MAIN_PAGE_RIGHT_PANEL_START,
+        MAIN_PAGE_RIGHT_PANEL_WIDTH,
+        MAIN_PAGE_RIGHT_PANEL_HEIGHT,
+        MAIN_PAGE_RIGHT_PANEL_COLOR
+    );
+    p->elements[p->num_elements++] = create_button(
+        MAIN_PAGE_ADD_TASK_BUTTON_START,
+        MAIN_PAGE_ADD_TASK_BUTTON_WIDTH,
+        MAIN_PAGE_ADD_TASK_BUTTON_HEIGHT,
+        MAIN_PAGE_ADD_TASK_BUTTON_COLOR,
+        WHITE,
+        "Add Task",
+        20,
+        onClickPrint
+    );
+    p->elements[p->num_elements++] = create_input(
+        MAIN_PAGE_TITLE_BOX_START,
+        MAIN_PAGE_TITLE_BOX_WIDTH,
+        MAIN_PAGE_TITLE_BOX_HEIGHT,
+        MAIN_PAGE_TITLE_BOX_COLOR1,
+        MAIN_PAGE_TITLE_BOX_COLOR2,
+        "Title",
+        "Title",
+        20
+    );
+    p->elements[p->num_elements++] = create_input(
+        MAIN_PAGE_DATE_BOX_START,
+        MAIN_PAGE_DATE_BOX_WIDTH,
+        MAIN_PAGE_DATE_BOX_HEIGHT,
+        MAIN_PAGE_DATE_BOX_COLOR1,
+        MAIN_PAGE_DATE_BOX_COLOR2,
+        "Date",
+        "Date",
+        20
+    );
     
 
     return p;

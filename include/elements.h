@@ -45,8 +45,10 @@ struct _Input {
     Color color1;
     Color color2;
     char text[1024];
+    char placeholder[1024];
     size_t font_size;
     bool clicked;
+    bool changed;
 };
 typedef struct _Text_box * text_box;
 struct _Text_box {
@@ -115,6 +117,7 @@ element create_input(
     Color color1,
     Color color2,
     char* text,
+    char * placeholder,
     size_t font_size
 );
 
