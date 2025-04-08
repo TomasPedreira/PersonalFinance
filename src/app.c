@@ -73,6 +73,15 @@ page create_main_page(){
         "Date",
         20
     );
+    p->elements[p->num_elements++] = create_text_box(
+        MAIN_PAGE_DESCRIPTION_BOX_START,
+        MAIN_PAGE_DESCRIPTION_BOX_WIDTH,
+        MAIN_PAGE_DESCRIPTION_BOX_HEIGHT,
+        MAIN_PAGE_DESCRIPTION_BOX_COLOR1,
+        MAIN_PAGE_DESCRIPTION_BOX_COLOR2,
+        "This description might be the worst placeholder that has ever been written in the history of mankind, and therefore might be the biggest mistake ive ever made.",
+        20
+    );
     
 
     return p;

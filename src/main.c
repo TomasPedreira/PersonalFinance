@@ -16,6 +16,8 @@ void update(app a);
 void render_page(page p);
 void render_panel(panel pnl);
 void render_input(input_form in);
+void render_text_box(text_box tb);
+
 void render_button(button b, size_t offset);
 void render_drop_down(drop_down dd);
 
@@ -24,6 +26,7 @@ void resize_element(element e, Vector2 start, Vector2 end);
 void resize_button(button b, Vector2 start, Vector2 end);
 void resize_drop_down(drop_down dd, Vector2 start, Vector2 end);
 void resize_input(input_form in, Vector2 start, Vector2 end);
+
 
 // Main loop
 int main() {
@@ -221,12 +224,16 @@ void render_page(page p){
             case PNL:
                 render_panel(p->elements[i]->pnl);
                 break;
+            case TB:
+                render_text_box(p->elements[i]->tb);
+                break;
             default:
                 break;
         }
     }
 }
 void render_input(input_form in){
+    
     DrawRectangle(
         in->start.x,
         in->start.y,
@@ -234,16 +241,14 @@ void render_input(input_form in){
         in->height,
         in->color1
     );
-    // drawing text inside the box, adding /n whenever the text is too long
     int num_of_lines = 0;
     char buffer[1024][1024];
     size_t buffer_index = 0;
     int len = strlen(in->text);
     bool centered = true;
-    // draw text
     if (in->changed){
         if (len > 0){
-            for (size_t i = 0 ; i < len; i++){
+            for (size_t i = 0 ; i < len && num_of_lines < 1024; i++){
                 
                 buffer[num_of_lines][buffer_index] = in->text[i];
                 buffer[num_of_lines][buffer_index+1] = '\0';
@@ -256,12 +261,7 @@ void render_input(input_form in){
                 }
                 buffer_index++;
             }
-            const int max_lines = (in->height*(1 - INBOX_PADDING * 2)) / in->font_size;
-            // pront every line of text
-            for (int i = 0; i < num_of_lines + 1; i++){
-                printf("%d: %s\n",i, buffer[i]);
-            }
-            
+            const int max_lines = (in->height*(1 - INBOX_PADDING * 2)) / in->font_size;            
             int starting_index = 0;
             if (num_of_lines >= max_lines){
                 starting_index = num_of_lines+1 - max_lines;
@@ -328,6 +328,56 @@ void render_input(input_form in){
     }
 
 }
+void render_text_box(text_box tb){
+    DrawRectangle(
+        tb->start.x,
+        tb->start.y,
+        tb->width,
+        tb->height,
+        tb->color1
+    );
+    int num_of_lines = 0;
+    char buffer[1024][1024];
+    size_t buffer_index = 0;
+    int len = strlen(tb->text);
+    if (len > 0){
+        for (size_t i = 0 ; i < len && num_of_lines < 1024; i++){
+            
+            buffer[num_of_lines][buffer_index] = tb->text[i];
+            buffer[num_of_lines][buffer_index+1] = '\0';
+            if (MeasureText(buffer[num_of_lines], tb->font_size) > (tb->width*(1 - INBOX_PADDING * 2))){
+                buffer[num_of_lines++][buffer_index] = '\0';
+                buffer_index = 0;
+                buffer[num_of_lines][buffer_index] = tb->text[i];
+                buffer[num_of_lines][buffer_index+1] = '\0';
+            }
+            buffer_index++;
+        }
+        const int max_lines = (tb->height*(1 - INBOX_PADDING * 2)) / tb->font_size;            
+        int starting_index = 0;
+        if (num_of_lines >= max_lines){
+            starting_index = num_of_lines+1 - max_lines;
+        }
+        for (int i = starting_index; i < num_of_lines + 1  ; i++){
+            Vector2 start_pos = (Vector2){
+                tb->start.x + tb->width  * INBOX_PADDING,
+                tb->start.y + tb->height * INBOX_PADDING + (i)*tb->font_size 
+            };
+            if (num_of_lines >= max_lines ){
+                start_pos.y = tb->start.y + tb->height * INBOX_PADDING + (i-starting_index)*tb->font_size;
+            }
+            DrawText(
+                buffer[i],
+                start_pos.x,
+                start_pos.y,
+                tb->font_size,
+                tb->color2
+            );
+        }        
+    }
+
+   
+}
 void render_panel(panel pnl){
     DrawRectangle(
         pnl->start.x,
@@ -375,6 +425,16 @@ void resize_input(input_form in, Vector2 start, Vector2 end){
     size_t new_y = end.y*in->start.y/start.y;
     in->start = (Vector2){new_x, new_y};
     size_t new_font = end.y*in->font_size/start.y;
+}
+void resize_text_box(text_box tb, Vector2 start, Vector2 end){
+    size_t new_width = end.x*tb->width/start.x;
+    size_t new_height = end.y*tb->height/start.y;
+    tb->width = new_width;
+    tb->height = new_height;
+    size_t new_x = end.x*tb->start.x/start.x;
+    size_t new_y = end.y*tb->start.y/start.y;
+    tb->start = (Vector2){new_x, new_y};
+    size_t new_font = end.y*tb->font_size/start.y;
 }
 void resize_panel(panel pnl, Vector2 start, Vector2 end){
     size_t new_width = end.x*pnl->width/start.x;

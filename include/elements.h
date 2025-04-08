@@ -59,7 +59,8 @@ struct _Text_box {
     Color color2;
     char text[1024];
     size_t font_size;
-    bool clicked;
+    float scroll_offset;
+    size_t num_lines;
 };
 
 typedef struct _Panel * panel;
@@ -71,7 +72,7 @@ struct _Panel {
 };
 
 
-typedef enum {DD, BTN, IN, PNL} elem_tag;
+typedef enum {DD, BTN, IN, PNL, TB} elem_tag;
 
 typedef struct _element * element;
 
@@ -83,6 +84,7 @@ struct _element {
         drop_down dd;
         input_form in;
         panel pnl;
+        text_box tb;
     };
     bool visible;
     bool enabled;
@@ -126,6 +128,15 @@ element create_panel(
     size_t width, 
     size_t height,
     Color color
+);
+element create_text_box(
+    Vector2 start,
+    size_t width, 
+    size_t height,
+    Color color1,
+    Color color2,
+    char* text,
+    size_t font_size
 );
 
 void destroy_drop_down(drop_down dd);

@@ -69,6 +69,7 @@ element create_input(
     i->color1 = color1;
     i->color2 = color2;
     strcpy(i->placeholder, placeholder);
+    i->text[0] = '\0';
     i->changed = false;
     i->clicked = false;
     i->font_size = font_size;   
@@ -112,6 +113,39 @@ element create_panel(
     return e;
 }
 
+element create_text_box(
+    Vector2 start,
+    size_t width, 
+    size_t height,
+    Color color1,
+    Color color2,
+    char* text,
+    size_t font_size
+){
+    text_box tb = malloc(sizeof(struct _Text_box));
+    if (tb == NULL){
+        return NULL;
+    }
+    tb->start = start;
+    tb->width = width;
+    tb->height = height;
+    tb->color1 = color1;
+    tb->color2 = color2;
+    tb->font_size = font_size;
+    strcpy(tb->text, text);   
+    element e = malloc(sizeof(struct _element));
+    if (e == NULL){
+        free(tb);
+        return NULL;
+    }
+    e->tag = TB;
+    e->page = MAIN_PAGE;
+    e->tb = tb;
+    e->visible = true;
+    e->enabled = true;
+    return e;  
+}
+
 
 void destroy_drop_down(drop_down dd){
     for (size_t i = 0; i < dd->num_buttons; i++){
@@ -129,4 +163,8 @@ void destroy_input(input_form in){
 }
 void destroy_panel(panel p){
     free(p);
+}
+
+void destroy_text_box(text_box tb){
+    free(tb);
 }
