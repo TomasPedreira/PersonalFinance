@@ -30,7 +30,6 @@ page create_main_page(){
     p->num_elements = 0;
     p->color = WHITE;    
     
-    // task creation panelanel 
     p->elements[p->num_elements++] = create_panel(
         MAIN_PAGE_LEFT_PANEL_START,
         MAIN_PAGE_LEFT_PANEL_WIDTH,
@@ -44,12 +43,12 @@ page create_main_page(){
         MAIN_PAGE_RIGHT_PANEL_COLOR
     );
     p->elements[p->num_elements++] = create_button(
-        MAIN_PAGE_ADD_TASK_BUTTON_START,
-        MAIN_PAGE_ADD_TASK_BUTTON_WIDTH,
-        MAIN_PAGE_ADD_TASK_BUTTON_HEIGHT,
-        MAIN_PAGE_ADD_TASK_BUTTON_COLOR,
+        MAIN_PAGE_ADD_POSITION_BUTTON_START,
+        MAIN_PAGE_ADD_POSITION_BUTTON_WIDTH,
+        MAIN_PAGE_ADD_POSITION_BUTTON_HEIGHT,
+        MAIN_PAGE_ADD_POSITION_BUTTON_COLOR,
         WHITE,
-        "Add Task",
+        "Add Position",
         20,
         onClickPrint
     );

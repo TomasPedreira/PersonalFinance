@@ -9,6 +9,7 @@ struct _app_sate {
     size_t num_pages;
     int width;
     int height;	
+    size_t num_positionss;
 };
 
 

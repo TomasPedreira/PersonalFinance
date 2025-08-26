@@ -7,6 +7,9 @@
 #include "app.h"
 #include "elements.h"
 
+void run_headless(int argc, char *argv[]);
+void run_gui();
+
 
 
 void render(app a);
@@ -29,17 +32,27 @@ void resize_input(input_form in, Vector2 start, Vector2 end);
 
 
 // Main loop
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc > 1) {
+        run_headless(argc, argv);
+    }else{
+        run_gui();
+    }
+    return 0;
+}
+void run_headless(int argc, char *argv[]){
+    
+}
+void run_gui(){
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "todo app");
     SetTargetFPS(60);
     SetExitKey(0);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
-    // SetWindowState(FLAG_WINDOW_MAXIMIZED);
     app a = create_app();
 
     if (a == NULL){
         printf("Error creating app\n");
-        return 1;
+        return;
     }
 
     while (!WindowShouldClose()) {
@@ -51,9 +64,6 @@ int main() {
     printf("Exiting\n");
 
     CloseWindow();
-
-
-    return 0;
 }
 void render(app a){
     BeginDrawing();

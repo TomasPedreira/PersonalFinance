@@ -20,7 +20,7 @@ build/%.o: src/%.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm -f build/*.o
+	del /Q build\*.o 2>nul || rm -f build/*.o
 
 
 

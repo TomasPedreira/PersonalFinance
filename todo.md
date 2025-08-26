@@ -12,3 +12,13 @@
 [ ] Text showing box;
 [ ] Create makdownfile with the task's description;
 [ ] Show markdown contents in the right panel;
+
+## Pages to be created
+
+[ ] Main graph page;
+[ ] Add position page;
+
+## Dreams
+
+[ ] Get current data on positions;
+[ ] Calculate taxes and other information;
